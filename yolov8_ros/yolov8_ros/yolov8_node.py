@@ -41,6 +41,8 @@ from yolov8_msgs.msg import Detection
 from yolov8_msgs.msg import DetectionArray
 from std_srvs.srv import SetBool
 
+import yaml
+
 
 class Yolov8Node(Node):
 
@@ -74,9 +76,33 @@ class Yolov8Node(Node):
             depth=1
         )
 
+        self.declare_parameter("data_yaml", None)
+
         self.cv_bridge = CvBridge()
-        self.yolo = YOLO(model)
-        self.yolo.fuse()
+        try:
+            self.yolo = YOLO(model)
+        except Exception as e:
+            self.get_logger().error(f"Could not load Yolo model{model}. Check file path. Node will shutdown.")
+            rclpy.shutdown()
+
+        if model.endswith('.engine'):
+            self.get_logger().info(f"Reading a TensorRT model'{model}'.")
+            self.get_logger().info(f"Not using self.yolo.fuse() with TensorRT model")
+            
+            # Now check for the data_yaml parameter
+            data_yaml_param = self.get_parameter('data_yaml').get_parameter_value()
+            if data_yaml_param.type_ == data_yaml_param.Type.NOT_SET:
+                self.get_logger().error("Parameter 'data_yaml' must be provided for .engine files. Node will shutdown.")
+                # Shutdown the node
+                rclpy.shutdown()  # This will cause main to exit
+            else:
+                self.model_names = self.load_yaml_and_create_dict()
+                if not self.model_names:
+                    self.get_logger().error(f"Could not read class names from {data_yaml_param}. Node will shutdown.")
+                    rclpy.shutdown()                
+        else:
+            self.yolo.fuse()
+            self.model_names = self.yolo.names
 
         # pubs
         self._pub = self.create_publisher(DetectionArray, "detections", 10)
@@ -89,6 +115,19 @@ class Yolov8Node(Node):
 
         # services
         self._srv = self.create_service(SetBool, "enable", self.enable_cb)
+
+    def load_yaml_and_create_dict(self):
+        data_yaml_param = self.get_parameter('data_yaml').get_parameter_value().string_value
+        if data_yaml_param:
+            with open(data_yaml_param, 'r') as file:
+                data = yaml.safe_load(file)
+                # Create a dictionary from names list
+                names_dict = {i: name for i, name in enumerate(data['names'])}
+                self.get_logger().info(f"Names dictionary created: {names_dict}")
+                return names_dict
+        else:
+            self.get_logger().error("No 'data_yaml' parameter provided. Cannot load YAML.")
+            return {}
 
     def enable_cb(
         self,
@@ -107,7 +146,7 @@ class Yolov8Node(Node):
         for box_data in results.boxes:
             hypothesis = {
                 "class_id": int(box_data.cls),
-                "class_name": self.yolo.names[int(box_data.cls)],
+                "class_name": self.model_names[int(box_data.cls)],
                 "score": float(box_data.conf)
             }
             hypothesis_list.append(hypothesis)

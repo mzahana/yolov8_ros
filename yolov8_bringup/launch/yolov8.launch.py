@@ -73,6 +73,12 @@ def generate_launch_description():
         "namespace",
         default_value="yolo",
         description="Namespace for the nodes")
+    
+    model = LaunchConfiguration("data_yaml")
+    model_cmd = DeclareLaunchArgument(
+        "data_yaml",
+        default_value="",
+        description="Path to the data.yaml file that contains class names")
 
     #
     # NODES
