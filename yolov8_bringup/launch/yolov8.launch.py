@@ -74,11 +74,11 @@ def generate_launch_description():
         default_value="yolo",
         description="Namespace for the nodes")
     
-    model = LaunchConfiguration("data_yaml")
-    model_cmd = DeclareLaunchArgument(
-        "data_yaml",
-        default_value="",
-        description="Path to the data.yaml file that contains class names")
+    task = LaunchConfiguration("task")
+    task_cmd = DeclareLaunchArgument(
+        "task",
+        default_value="segment",
+        description="Task: detect, segment ")
 
     #
     # NODES
@@ -94,6 +94,7 @@ def generate_launch_description():
             "enable": enable,
             "threshold": threshold,
             "image_reliability": image_reliability,
+            "task": task,
         }],
         remappings=[("image_raw", input_image_topic)]
     )
@@ -132,6 +133,7 @@ def generate_launch_description():
     ld.add_action(input_image_topic_cmd)
     ld.add_action(image_reliability_cmd)
     ld.add_action(namespace_cmd)
+    ld.add_action(task_cmd)
 
     ld.add_action(detector_node_cmd)
     ld.add_action(tracking_node_cmd)
