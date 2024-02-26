@@ -250,8 +250,9 @@ class DebugNode(Node):
                     kp_marker_array.markers.append(marker)
 
         # publish dbg image
-        self._dbg_pub.publish(self.cv_bridge.cv2_to_imgmsg(cv_image,
-                                                           encoding=img_msg.encoding))
+        dbg_img_msg = self.cv_bridge.cv2_to_imgmsg(cv_image, encoding=img_msg.encoding)
+        dbg_img_msg.header = img_msg.header
+        self._dbg_pub.publish(dbg_img_msg)
         self._bb_markers_pub.publish(bb_marker_array)
         self._kp_markers_pub.publish(kp_marker_array)
 
