@@ -79,6 +79,12 @@ def generate_launch_description():
         "task",
         default_value="segment",
         description="Task: detect, segment ")
+    
+    use_sim_time = LaunchConfiguration("use_sim_time")
+    use_sim_time_cmd = DeclareLaunchArgument(
+        "use_sim_time",
+        default_value="false",
+        description="Simulation vs. real time")
 
     #
     # NODES
@@ -95,6 +101,7 @@ def generate_launch_description():
             "threshold": threshold,
             "image_reliability": image_reliability,
             "task": task,
+            "use_sim_time": use_sim_time,
         }],
         remappings=[("image_raw", input_image_topic)]
     )
@@ -106,7 +113,8 @@ def generate_launch_description():
         namespace=namespace,
         parameters=[{
             "tracker": tracker,
-            "image_reliability": image_reliability
+            "image_reliability": image_reliability,
+            "use_sim_time": use_sim_time,
         }],
         remappings=[("image_raw", input_image_topic)]
     )
@@ -116,7 +124,8 @@ def generate_launch_description():
         executable="debug_node",
         name="debug_node",
         namespace=namespace,
-        parameters=[{"image_reliability": image_reliability}],
+        parameters=[{"image_reliability": image_reliability, "use_sim_time": use_sim_time,
+        }],
         remappings=[
             ("image_raw", input_image_topic),
             ("detections", "tracking")
@@ -134,6 +143,7 @@ def generate_launch_description():
     ld.add_action(image_reliability_cmd)
     ld.add_action(namespace_cmd)
     ld.add_action(task_cmd)
+    ld.add_action(use_sim_time_cmd)
 
     ld.add_action(detector_node_cmd)
     ld.add_action(tracking_node_cmd)
