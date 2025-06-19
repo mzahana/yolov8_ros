@@ -55,6 +55,12 @@ def generate_launch_description():
         default_value="0.5",
         description="Minimum probability of a detection to be published")
 
+    iou = LaunchConfiguration("iou")
+    iou_cmd = DeclareLaunchArgument(
+        "iou",
+        default_value="0.5",
+        description="Intersection Over Union (IoU) threshold for Non-Maximum Suppression (NMS). Lower values result in fewer detections by eliminating overlapping boxes, useful for reducing duplicates.")
+
     input_image_topic = LaunchConfiguration("input_image_topic")
     input_image_topic_cmd = DeclareLaunchArgument(
         "input_image_topic",
@@ -99,6 +105,7 @@ def generate_launch_description():
             "device": device,
             "enable": enable,
             "threshold": threshold,
+            "iou": iou,
             "image_reliability": image_reliability,
             "task": task,
             "use_sim_time": use_sim_time,
@@ -139,6 +146,7 @@ def generate_launch_description():
     ld.add_action(device_cmd)
     ld.add_action(enable_cmd)
     ld.add_action(threshold_cmd)
+    ld.add_action(iou_cmd)
     ld.add_action(input_image_topic_cmd)
     ld.add_action(image_reliability_cmd)
     ld.add_action(namespace_cmd)

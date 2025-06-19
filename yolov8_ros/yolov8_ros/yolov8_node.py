@@ -62,6 +62,10 @@ class Yolov8Node(Node):
         self.threshold = self.get_parameter(
             "threshold").get_parameter_value().double_value
 
+        self.declare_parameter("iou", 0.7)
+        self.iou = self.get_parameter(
+            "iou").get_parameter_value().double_value
+
         self.declare_parameter("enable", True)
         self.enable = self.get_parameter(
             "enable").get_parameter_value().bool_value
@@ -208,6 +212,7 @@ class Yolov8Node(Node):
                 verbose=False,
                 stream=False,
                 conf=self.threshold,
+                iou=self.iou,
                 device=self.device,
             )
             results: Results = results[0].cpu()
